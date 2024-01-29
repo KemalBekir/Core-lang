@@ -11,8 +11,8 @@ const (
 	END     = "END"
 
 	// Identifiers and literals
-	NAME = "NAME" // variable names,
-	INT  = "INT"  // integer numbers
+	IDENT = "IDENT" // variable names,
+	INT   = "INT"   // integer numbers
 
 	// Operators
 	ASSIGN_OP = "="
@@ -29,5 +29,17 @@ const (
 
 	// Keywords
 	FUNCTION = "FUNCTION"
-	LET      = "LET"
+	VAR      = "VAR"
 )
+
+var tokenDictionary = map[string]TokenType{
+	"function": FUNCTION,
+	"var":      VAR,
+}
+
+func LookupIdentifier(identifier string) TokenType {
+	if currentToken, ok := tokenDictionary[identifier]; ok {
+		return currentToken
+	}
+	return IDENT
+}
