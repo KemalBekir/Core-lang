@@ -30,11 +30,17 @@ const (
 	// Keywords
 	FUNCTION = "FUNCTION"
 	VAR      = "VAR"
+	TRUE     = "TRUE"
+	FALSE    = "FALSE"
+	RETURN   = "RETURN"
 )
 
 var tokenDictionary = map[string]TokenType{
 	"function": FUNCTION,
 	"var":      VAR,
+	"true":     TRUE,
+	"false":    FALSE,
+	"return":   RETURN,
 }
 
 func LookupIdentifier(identifier string) TokenType {

@@ -32,6 +32,8 @@ func (lex *Lexer) NextToken() token.Token {
 	lex.ignoreWhitespace()
 
 	switch lex.char {
+	case '=':
+		currentToken = newToken(token.ASSIGN_OP, lex.char)
 	case '"':
 		currentToken = newToken(token.ASSIGN_OP, lex.char)
 	case ';':
@@ -103,4 +105,12 @@ func (lex *Lexer) checkNumber() string {
 
 func isNumber(char byte) bool {
 	return '0' <= char && char <= '9'
+}
+
+func (lex *Lexer) peekAheadCharacter() byte {
+	if lex.readPos >= len(lex.input) {
+		return 0
+	} else {
+		return lex.input[lex.readPos]
+	}
 }
