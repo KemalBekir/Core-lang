@@ -16,7 +16,7 @@ func New(input string) *Lexer {
 }
 
 func (lex *Lexer) readCharacter() {
-	if lex.position >= len(lex.input) {
+	if lex.readPos >= len(lex.input) {
 		lex.char = 0
 	} else {
 		lex.char = lex.input[lex.readPos]
