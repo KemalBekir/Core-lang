@@ -4,20 +4,41 @@ import (
 	"Go-Tutorials/Core-lang/ast"
 	"Go-Tutorials/Core-lang/lexer"
 	"Go-Tutorials/Core-lang/token"
+	"fmt"
+)
+
+const (
+	_ int = iota
+	LOWEST
+	SUM // +
 )
 
 type Parser struct {
-	lex *lexer.Lexer
+	lex    *lexer.Lexer
+	errors []string
 
 	currentToken token.Token
 	peekToken    token.Token
+
+	prefixParseFunction map[token.TokenType]prefixParseFunction
+	infixParseFunction  map[token.TokenType]infixParseFunction
 }
 
+type (
+	prefixParseFunction func() ast.Expression
+	infixParseFunction  func(ast.Expression) ast.Expression
+)
+
 func New(lex *lexer.Lexer) *Parser {
-	par := &Parser{lex: lex}
+	par := &Parser{
+		lex:    lex,
+		errors: []string{},
+	}
+
+	par.prefixParseFunction = make(map[token.TokenType]prefixParseFunction)
+	par.regiterPrefix(token.IDENT, par.parseIdentifier)
 
 	par.nextToken()
-
 	par.nextToken()
 
 	return par
@@ -47,8 +68,10 @@ func (par *Parser) parseStatement() ast.Statement {
 	switch par.currentToken.Type {
 	case token.VAR:
 		return par.praseVarStatement()
+	case token.RETURN:
+		return par.parseReturnStatement()
 	default:
-		return nil
+		return par.parseExpressionStatement()
 	}
 }
 
@@ -84,6 +107,65 @@ func (par *Parser) ensureNext(tok token.TokenType) bool {
 		par.nextToken()
 		return true
 	} else {
+		par.peekUnexpectedError(tok)
 		return false
 	}
+}
+
+func (par *Parser) Errors() []string {
+	return par.errors
+}
+
+func (par *Parser) peekUnexpectedError(tok token.TokenType) {
+	msg := fmt.Sprintf("expected next token to be - %s, got - %s instead",
+		tok, par.peekToken.Type)
+	par.errors = append(par.errors, msg)
+}
+
+func (par *Parser) parseReturnStatement() *ast.ReturnStatement {
+	statement := &ast.ReturnStatement{Token: par.currentToken}
+
+	par.nextToken()
+
+	for !par.currentTokenIs(token.SEMICOLON) {
+		par.nextToken()
+	}
+
+	return statement
+}
+
+func (par *Parser) regiterPrefix(tokenType token.TokenType, fn prefixParseFunction) {
+	par.prefixParseFunction[tokenType] = fn
+}
+
+func (par *Parser) registerInfix(tokenType token.TokenType, fn infixParseFunction) {
+	par.infixParseFunction[tokenType] = fn
+}
+
+func (par *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	statement := &ast.ExpressionStatement{Token: par.currentToken}
+
+	statement.Expression = par.parseExpression(LOWEST)
+
+	if par.peekedTokenIs(token.SEMICOLON) {
+		par.nextToken()
+	}
+
+	return statement
+}
+
+func (par *Parser) parseExpression(precedence int) ast.Expression {
+	prefix := par.prefixParseFunction[par.currentToken.Type]
+
+	if prefix == nil {
+		return nil
+	}
+
+	leftExpression := prefix()
+
+	return leftExpression
+}
+
+func (par *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: par.currentToken, Value: par.currentToken.Literal}
 }
