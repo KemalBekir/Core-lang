@@ -29,16 +29,20 @@ const (
 	RIGHT_CURLY_BRACE = "}"
 
 	// Keywords
-	FUNCTION = "FUNCTION"
-	VAR      = "VAR"
-	TRUE     = "TRUE"
-	FALSE    = "FALSE"
-	RETURN   = "RETURN"
+	FUNCTION    = "FUNCTION"
+	VAR         = "VAR"
+	TRUE        = "TRUE"
+	FALSE       = "FALSE"
+	RETURN      = "RETURN"
+	INT_TYPE    = "INT_TYPE"
+	STRING_TYPE = "STRING_TYPE"
 )
 
 var tokenDictionary = map[string]TokenType{
 	"function": FUNCTION,
 	"var":      VAR,
+	"int":      INT_TYPE,
+	"string":   STRING_TYPE,
 	"true":     TRUE,
 	"false":    FALSE,
 	"return":   RETURN,

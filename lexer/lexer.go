@@ -77,7 +77,7 @@ func newToken(tokenType token.TokenType, char byte) token.Token {
 
 func (lex *Lexer) searchIdentifier() string {
 	position := lex.position
-	for isAlphabetic(lex.char) {
+	for isAlphabetic(lex.char) || isNumber(lex.char) {
 		lex.readCharacter()
 	}
 

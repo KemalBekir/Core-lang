@@ -5,6 +5,7 @@ import (
 	"Go-Tutorials/Core-lang/lexer"
 	"Go-Tutorials/Core-lang/token"
 	"fmt"
+	"strconv"
 )
 
 const (
@@ -168,4 +169,19 @@ func (par *Parser) parseExpression(precedence int) ast.Expression {
 
 func (par *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: par.currentToken, Value: par.currentToken.Literal}
+}
+
+func (par *Parser) parseIntegerLiteral() ast.Expression {
+	literal := &ast.IntegerLiteral{Token: par.currentToken}
+
+	value, err := strconv.ParseInt(par.currentToken.Literal, 0, 64)
+	if err != nil {
+		message := fmt.Sprintf("could not parse %q as integer", par.currentToken.Literal)
+		par.errors = append(par.errors, message)
+		return nil
+	}
+
+	literal.Value = value
+
+	return literal
 }
