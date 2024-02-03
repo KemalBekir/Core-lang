@@ -68,7 +68,7 @@ func (par *Parser) ParseProgram() *ast.Program {
 func (par *Parser) parseStatement() ast.Statement {
 	switch par.currentToken.Type {
 	case token.VAR:
-		return par.praseVarStatement()
+		return par.parseVarStatement()
 	case token.RETURN:
 		return par.parseReturnStatement()
 	default:
@@ -76,7 +76,7 @@ func (par *Parser) parseStatement() ast.Statement {
 	}
 }
 
-func (par *Parser) praseVarStatement() *ast.VarStatement {
+func (par *Parser) parseVarStatement() *ast.VarStatement {
 	statement := &ast.VarStatement{Token: par.currentToken}
 
 	if !par.ensureNext(token.IDENT) {
@@ -84,6 +84,12 @@ func (par *Parser) praseVarStatement() *ast.VarStatement {
 	}
 
 	statement.Name = &ast.Identifier{Token: par.currentToken, Value: par.currentToken.Literal}
+
+	if !par.expectNextType() {
+		return nil
+	}
+
+	statement.Type = par.currentToken.Literal
 
 	if !par.ensureNext(token.ASSIGN_OP) {
 		return nil
@@ -184,4 +190,18 @@ func (par *Parser) parseIntegerLiteral() ast.Expression {
 	literal.Value = value
 
 	return literal
+}
+
+func (par *Parser) expectNextType() bool {
+	types := map[token.TokenType]bool{
+		token.INT_TYPE:    true,
+		token.STRING_TYPE: true,
+	}
+	if types[par.peekToken.Type] {
+		par.nextToken()
+		return true
+	} else {
+		par.peekUnexpectedError(token.INT_TYPE)
+		return false
+	}
 }

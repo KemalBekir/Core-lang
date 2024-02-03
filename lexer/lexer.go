@@ -33,9 +33,14 @@ func (lex *Lexer) NextToken() token.Token {
 
 	switch lex.char {
 	case '=':
-		currentToken = newToken(token.ASSIGN_OP, lex.char)
-	case '"':
-		currentToken = newToken(token.ASSIGN_OP, lex.char)
+		if lex.peekAheadCharacter() == '=' {
+			char := lex.char
+			lex.readCharacter()
+			literal := string(char) + string(lex.char)
+			currentToken = token.Token{Type: token.EQ, Literal: literal}
+		} else {
+			currentToken = newToken(token.ASSIGN_OP, lex.char)
+		}
 	case ';':
 		currentToken = newToken(token.SEMICOLON, lex.char)
 	case '(':
@@ -50,6 +55,10 @@ func (lex *Lexer) NextToken() token.Token {
 		currentToken = newToken(token.LEFT_CURLY_BRACE, lex.char)
 	case '}':
 		currentToken = newToken(token.RIGHT_CURLY_BRACE, lex.char)
+	case '"':
+		currentToken.Type = token.STRING
+		currentToken.Literal = lex.readString()
+
 	case 0:
 		currentToken.Literal = ""
 		currentToken.Type = token.END
@@ -72,7 +81,13 @@ func (lex *Lexer) NextToken() token.Token {
 }
 
 func newToken(tokenType token.TokenType, char byte) token.Token {
-	return token.Token{Type: tokenType, Literal: string(char)}
+	if tokenType == "=" {
+		return token.Token{Type: token.ASSIGN_OP, Literal: string(char)}
+	} else if tokenType == ";" {
+		return token.Token{Type: token.SEMICOLON, Literal: string(char)}
+	} else {
+		return token.Token{Type: tokenType, Literal: string(char)}
+	}
 }
 
 func (lex *Lexer) searchIdentifier() string {
@@ -113,4 +128,16 @@ func (lex *Lexer) peekAheadCharacter() byte {
 	} else {
 		return lex.input[lex.readPos]
 	}
+}
+
+func (lex *Lexer) readString() string {
+	position := lex.position + 1
+	for {
+		lex.readCharacter()
+		if lex.char == '"' || lex.char == 0 {
+			break
+		}
+	}
+
+	return lex.input[position:lex.position]
 }

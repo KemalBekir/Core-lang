@@ -11,9 +11,13 @@ const (
 	INVALID = "INVALID"
 	END     = "END"
 
+	EQ     = "=="
+	NOT_EQ = "!="
+
 	// Identifiers and literals
-	IDENT = "IDENT" // variable names,
-	INT   = "INT"   // integer numbers
+	IDENT  = "IDENT" // variable names,
+	INT    = "INT"   // integer numbers
+	STRING = "STRING"
 
 	// Operators
 	ASSIGN_OP = "="

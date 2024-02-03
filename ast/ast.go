@@ -45,6 +45,7 @@ func (prg *Program) String() string {
 type VarStatement struct {
 	Token token.Token // the token.VAR token
 	Name  *Identifier
+	Type  string //storing the variable type
 	Value Expression
 }
 
