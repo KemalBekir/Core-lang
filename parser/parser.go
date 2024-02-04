@@ -8,10 +8,22 @@ import (
 	"strconv"
 )
 
+var precedences = map[token.TokenType]int{
+	token.EQ:           EQUALS,
+	token.NOT_EQ:       EQUALS,
+	token.LESS_THEN:    LESSGREATER,
+	token.GREATER_THEN: LESSGREATER,
+	token.PLUS:         SUM,
+	token.MINUS:        SUM,
+}
+
 const (
 	_ int = iota
 	LOWEST
-	SUM // +
+	EQUALS      // ==
+	LESSGREATER // > or <
+	SUM         // +
+	PREFIX      // -X OR !X
 )
 
 type Parser struct {
@@ -37,7 +49,18 @@ func New(lex *lexer.Lexer) *Parser {
 	}
 
 	par.prefixParseFunction = make(map[token.TokenType]prefixParseFunction)
-	par.regiterPrefix(token.IDENT, par.parseIdentifier)
+	par.registerPrefix(token.IDENT, par.parseIdentifier)
+	par.registerPrefix(token.BANG, par.parsePrefixExpression)
+	par.registerPrefix(token.MINUS, par.parsePrefixExpression)
+
+	par.infixParseFunction = make(map[token.TokenType]infixParseFunction)
+	par.registerInfix(token.PLUS, par.parseInfixExpression)
+	par.registerInfix(token.MINUS, par.parseInfixExpression)
+	par.registerInfix(token.SLASH, par.parseInfixExpression)
+	par.registerInfix(token.EQ, par.parseInfixExpression)
+	par.registerInfix(token.NOT_EQ, par.parseInfixExpression)
+	par.registerInfix(token.LESS_THEN, par.parseInfixExpression)
+	par.registerInfix(token.GREATER_THEN, par.parseInfixExpression)
 
 	par.nextToken()
 	par.nextToken()
@@ -141,7 +164,7 @@ func (par *Parser) parseReturnStatement() *ast.ReturnStatement {
 	return statement
 }
 
-func (par *Parser) regiterPrefix(tokenType token.TokenType, fn prefixParseFunction) {
+func (par *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFunction) {
 	par.prefixParseFunction[tokenType] = fn
 }
 
@@ -163,11 +186,10 @@ func (par *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 
 func (par *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := par.prefixParseFunction[par.currentToken.Type]
-
 	if prefix == nil {
+		par.singnalPrefixParseFnNotFound(par.currentToken.Type)
 		return nil
 	}
-
 	leftExpression := prefix()
 
 	return leftExpression
@@ -204,4 +226,52 @@ func (par *Parser) expectNextType() bool {
 		par.peekUnexpectedError(token.INT_TYPE)
 		return false
 	}
+}
+
+func (par *Parser) singnalPrefixParseFnNotFound(tok token.TokenType) {
+	message := fmt.Sprintf("no prefix parse function for %s found", tok)
+	par.errors = append(par.errors, message)
+}
+
+func (par *Parser) parsePrefixExpression() ast.Expression {
+	expression := &ast.PrefixExpression{
+		Token:    par.currentToken,
+		Operator: par.currentToken.Literal,
+	}
+
+	par.nextToken()
+
+	expression.Right = par.parseExpression(PREFIX)
+
+	return expression
+}
+
+func (par *Parser) getUpcomingPrecedence() int {
+	if par, ok := precedences[par.peekToken.Type]; ok {
+		return par
+	}
+
+	return LOWEST
+}
+
+func (par *Parser) currentPrecedence() int {
+	if par, ok := precedences[par.currentToken.Type]; ok {
+		return par
+	}
+
+	return LOWEST
+}
+
+func (par *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	expression := &ast.InfixExpression{
+		Token:    par.currentToken,
+		Operator: par.currentToken.Literal,
+		Left:     left,
+	}
+
+	precedence := par.currentPrecedence()
+	par.nextToken()
+	expression.Right = par.parseExpression(precedence)
+
+	return expression
 }

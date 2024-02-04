@@ -22,6 +22,13 @@ const (
 	// Operators
 	ASSIGN_OP = "="
 	PLUS      = "+"
+	MINUS     = "-"
+	BANG      = "!"
+	ASTERISK  = "*"
+	SLASH     = "/"
+
+	LESS_THEN    = "<"
+	GREATER_THEN = ">"
 
 	// Delimeters
 	COMMA     = ","
