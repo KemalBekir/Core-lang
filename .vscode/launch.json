@@ -14,7 +14,16 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/lexer/lexer_test.go"
+      "program": "${workspaceFolder}/lexer/lexer_test.go",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug Lexer",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/parser/parser_test.go",
+      "console": "integratedTerminal"
     }
   ]
 }

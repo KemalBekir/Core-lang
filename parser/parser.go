@@ -15,6 +15,8 @@ var precedences = map[token.TokenType]int{
 	token.GREATER_THEN: LESSGREATER,
 	token.PLUS:         SUM,
 	token.MINUS:        SUM,
+	token.SLASH:        PRODUCT,
+	token.ASTERISK:     PRODUCT,
 }
 
 const (
@@ -23,7 +25,10 @@ const (
 	EQUALS      // ==
 	LESSGREATER // > or <
 	SUM         // +
+	PRODUCT     // *
 	PREFIX      // -X OR !X
+	CALL        // myFunction(x)
+	INDEX       // array[index]
 )
 
 type Parser struct {
