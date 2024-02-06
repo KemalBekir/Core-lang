@@ -54,7 +54,9 @@ func (vs *VarStatement) TokenLiteral() string { return vs.Token.Literal }
 func (vs *VarStatement) String() string {
 	var output bytes.Buffer
 
-	output.WriteString(vs.TokenLiteral() + " ")
+	output.WriteString("var ")
+	output.WriteString(vs.Type) // Include the variable type
+	output.WriteString(" ")
 	output.WriteString(vs.Name.String())
 	output.WriteString(" = ")
 

@@ -78,6 +78,38 @@ func (par *Parser) nextToken() {
 	par.peekToken = par.lex.NextToken()
 }
 
+// func (p *Parser) ParseProgram() *ast.Program {
+// 	program := &ast.Program{}
+// 	program.Statements = []ast.Statement{}
+
+// 	for p.currentToken.Type != token.END {
+// 		stmt := p.parseStatement()
+// 		if stmt != nil {
+// 			fmt.Printf("Parsed statement: %T\n", stmt) // Debug print
+// 			program.Statements = append(program.Statements, stmt)
+// 		}
+// 		p.nextToken()
+// 	}
+
+// 	return program
+// }
+
+// func (par *Parser) ParseProgram() *ast.Program {
+// 	program := &ast.Program{}
+// 	program.Statements = []ast.Statement{}
+
+// 	for par.currentToken.Type != token.END {
+// 		statement := par.parseStatement()
+// 		if statement != nil {
+// 			program.Statements = append(program.Statements, statement)
+// 		}
+// 		par.nextToken()
+// 	}
+
+// 	return program
+// }
+
+// Old ParseProgram
 func (par *Parser) ParseProgram() *ast.Program {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
@@ -107,6 +139,10 @@ func (par *Parser) parseStatement() ast.Statement {
 func (par *Parser) parseVarStatement() *ast.VarStatement {
 	statement := &ast.VarStatement{Token: par.currentToken}
 
+	if !par.ensureNext(token.VAR) {
+		return nil
+	}
+
 	if !par.ensureNext(token.IDENT) {
 		return nil
 	}
@@ -123,8 +159,17 @@ func (par *Parser) parseVarStatement() *ast.VarStatement {
 		return nil
 	}
 
-	for !par.currentTokenIs(token.SEMICOLON) {
-		par.nextToken()
+	// Parse the expression for the value
+	par.nextToken()
+	statement.Value = par.parseExpression(LOWEST)
+
+	if statement.Value == nil {
+		return nil
+	}
+
+	// Ensure the statement ends with a semicolon
+	if !par.ensureNext(token.SEMICOLON) {
+		return nil
 	}
 
 	return statement

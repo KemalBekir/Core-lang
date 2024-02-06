@@ -6,7 +6,10 @@ import (
 )
 
 func TestNextToken(t *testing.T) {
-	input := `var string b = "abc";`
+	input := `
+	var string b = "abc";
+	var int a = 5;
+	`
 
 	tests := []struct {
 		expectedType    token.TokenType
@@ -17,6 +20,12 @@ func TestNextToken(t *testing.T) {
 		{token.IDENT, "b"},
 		{token.ASSIGN_OP, "="},
 		{token.STRING, "abc"},
+		{token.SEMICOLON, ";"},
+		{token.VAR, "var"},
+		{token.INT_TYPE, "int"},
+		{token.IDENT, "a"},
+		{token.ASSIGN_OP, "="},
+		{token.INT, "5"},
 		{token.SEMICOLON, ";"},
 		{token.END, ""},
 	}

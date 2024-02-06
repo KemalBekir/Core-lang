@@ -14,16 +14,22 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/lexer/lexer_test.go",
-      "console": "integratedTerminal"
+      "program": "${workspaceFolder}/lexer/lexer_test.go"
     },
     {
-      "name": "Debug Lexer",
+      "name": "Debug Parser",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/parser/parser_test.go",
-      "console": "integratedTerminal"
+      "args": ["./..."]
+    },
+    {
+      "name": "Debug AST",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/ast/ast_test.go"
     }
   ]
 }
