@@ -161,3 +161,12 @@ func (ine *InfixExpression) String() string {
 
 	return output.String()
 }
+
+type StringLiteral struct {
+	Token token.Token
+	Value string
+}
+
+func (strl *StringLiteral) expressionNode()      {}
+func (strl *StringLiteral) TokenLiteral() string { return strl.Token.Literal }
+func (strl *StringLiteral) String() string       { return strl.Token.Literal }

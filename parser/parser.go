@@ -57,6 +57,8 @@ func New(lex *lexer.Lexer) *Parser {
 	par.registerPrefix(token.IDENT, par.parseIdentifier)
 	par.registerPrefix(token.BANG, par.parsePrefixExpression)
 	par.registerPrefix(token.MINUS, par.parsePrefixExpression)
+	par.registerPrefix(token.INT, par.parseIntegerLiteral)
+	par.registerPrefix(token.STRING, par.parseStringLiteral)
 
 	par.infixParseFunction = make(map[token.TokenType]infixParseFunction)
 	par.registerInfix(token.PLUS, par.parseInfixExpression)
@@ -139,38 +141,50 @@ func (par *Parser) parseStatement() ast.Statement {
 func (par *Parser) parseVarStatement() *ast.VarStatement {
 	statement := &ast.VarStatement{Token: par.currentToken}
 
-	if !par.ensureNext(token.VAR) {
-		return nil
-	}
-
-	if !par.ensureNext(token.IDENT) {
-		return nil
-	}
-
-	statement.Name = &ast.Identifier{Token: par.currentToken, Value: par.currentToken.Literal}
-
+	// Next should be the type
+	// fmt.Println("Parsing type...")
 	if !par.expectNextType() {
+		// fmt.Println("Failed to parse type.")
 		return nil
 	}
-
 	statement.Type = par.currentToken.Literal
+	// fmt.Println("Type:", statement.Type)
 
-	if !par.ensureNext(token.ASSIGN_OP) {
+	// Next should be the identifier
+	// fmt.Println("Parsing identifier...")
+	if !par.ensureNext(token.IDENT) {
+		// fmt.Println("Failed to parse identifier.")
 		return nil
 	}
+	statement.Name = &ast.Identifier{Token: par.currentToken, Value: par.currentToken.Literal}
+	// fmt.Println("Identifier:", statement.Name.Value)
+
+	// Expect assignment operator
+	// fmt.Println("Expecting assignment operator...")
+	if !par.ensureNext(token.ASSIGN_OP) {
+		fmt.Println("Failed to parse assignment operator.")
+		return nil
+	}
+	// fmt.Println("Assignment operator:", par.currentToken.Literal)
 
 	// Parse the expression for the value
+	// fmt.Println("Parsing value expression...")
 	par.nextToken()
 	statement.Value = par.parseExpression(LOWEST)
 
 	if statement.Value == nil {
+		// fmt.Println("Failed to parse value expression.")
 		return nil
 	}
+	// fmt.Println("Value expression:", statement.Value)
 
-	// Ensure the statement ends with a semicolon
+	// Expect semicolon to end the statement
+	// fmt.Println("Expecting semicolon...")
 	if !par.ensureNext(token.SEMICOLON) {
+		// fmt.Println("Failed to parse semicolon.")
 		return nil
 	}
+	// fmt.Println("Semicolon:", par.currentToken.Literal)
 
 	return statement
 }
@@ -235,12 +249,17 @@ func (par *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 }
 
 func (par *Parser) parseExpression(precedence int) ast.Expression {
+	// fmt.Println("Parsing expression...")
+	// fmt.Println("Current token type:", par.currentToken.Type)
+
 	prefix := par.prefixParseFunction[par.currentToken.Type]
 	if prefix == nil {
 		par.singnalPrefixParseFnNotFound(par.currentToken.Type)
 		return nil
 	}
 	leftExpression := prefix()
+
+	// fmt.Println("Left expression:", leftExpression)
 
 	return leftExpression
 }
@@ -324,4 +343,8 @@ func (par *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	expression.Right = par.parseExpression(precedence)
 
 	return expression
+}
+
+func (par *Parser) parseStringLiteral() ast.Expression {
+	return &ast.StringLiteral{Token: par.currentToken, Value: par.currentToken.Literal}
 }
