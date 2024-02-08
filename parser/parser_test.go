@@ -34,9 +34,6 @@ func TestVarStatements(t *testing.T) {
 		{"b", "int"},
 		{"a", "string"},
 		{"foobar", "int"},
-		// {"x", "int"},
-		// {"y", "int"},
-		// {"foobar", "int"},
 	}
 
 	for i, tt := range tests {
@@ -69,7 +66,6 @@ func testVarStatement(t *testing.T, s ast.Statement, expectedName string, expect
 		return false
 	}
 
-	// Check for variable type
 	if varStatement.Type != expectedType {
 		t.Errorf("varStatement.Type not '%s', got=%s", expectedType, varStatement.Type)
 		return false
@@ -93,9 +89,9 @@ func checkParserErrors(t *testing.T, par *Parser) {
 
 func TestReturnStatements(t *testing.T) {
 	input := `
-		return 3;
-		return 15;
-		return 123321;
+return 3;
+return 15;
+return 123321;
 	`
 
 	lex := lexer.New(input)
