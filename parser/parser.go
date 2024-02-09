@@ -219,9 +219,6 @@ func (par *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 }
 
 func (par *Parser) parseExpression(precedence int) ast.Expression {
-	fmt.Println("Parsing expression...")
-	fmt.Println("Current token type:", par.currentToken.Type)
-
 	prefix := par.prefixParseFunction[par.currentToken.Type]
 	if prefix == nil {
 		par.singnalPrefixParseFnNotFound(par.currentToken.Type)
@@ -229,7 +226,16 @@ func (par *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	leftExpression := prefix()
 
-	fmt.Println("Left expression:", leftExpression)
+	for !par.peekedTokenIs(token.SEMICOLON) && precedence < par.getUpcomingPrecedence() {
+		infix := par.infixParseFunction[par.peekToken.Type]
+		if infix == nil {
+			return leftExpression
+		}
+
+		par.nextToken()
+
+		leftExpression = infix(leftExpression)
+	}
 
 	return leftExpression
 }

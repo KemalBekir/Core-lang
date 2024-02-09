@@ -3,6 +3,7 @@ package parser
 import (
 	"Go-Tutorials/Core-lang/ast"
 	"Go-Tutorials/Core-lang/lexer"
+	"fmt"
 	"testing"
 )
 
@@ -114,6 +115,98 @@ return 123321;
 		if returnStatement.TokenLiteral() != "return" {
 			t.Errorf("returnStatement.TokenLiteral not 'return', got %q",
 				returnStatement.TokenLiteral())
+		}
+	}
+}
+
+func TestIntegerLiteralExpression(t *testing.T) {
+	input := "7;"
+
+	lex := lexer.New(input)
+	par := New(lex)
+	program := par.ParseProgram()
+	checkParserErrors(t, par)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program does not have enough statements. got=%d",
+			len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0])
+	}
+
+	literal, ok := statement.Expression.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("expression not *ast.IntegerLiteral. got=%T", statement.Expression)
+	}
+	if literal.Value != 7 {
+		t.Errorf("literal.Value not %d. got=%d", 7, literal.Value)
+	}
+	if literal.TokenLiteral() != "7" {
+		t.Errorf("literal.TokenLiteral not %s. got=%s", "7", literal.TokenLiteral())
+	}
+}
+
+func testIntegerLiteral(t *testing.T, intL ast.Expression, value int64) bool {
+	integer, ok := intL.(*ast.IntegerLiteral)
+	if !ok {
+		t.Errorf("intL not *ast.IntegerLiteral. got=%T", intL)
+		return false
+	}
+
+	if integer.Value != value {
+		t.Errorf("integer.Value not %d. got=%d", value, integer.Value)
+		return false
+	}
+
+	if integer.TokenLiteral() != fmt.Sprintf("%d", value) {
+		t.Errorf("integer.TokenLiteral not %d. got=%s", value, integer.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+func TestParsingPrefixExpression(t *testing.T) {
+	prefixTests := []struct {
+		input        string
+		operator     string
+		integerValue int64
+	}{
+		{"!4;", "!", 4},
+		{"-9;", "-", 9},
+	}
+
+	for _, tt := range prefixTests {
+		lex := lexer.New(tt.input)
+		par := New(lex)
+		program := par.ParseProgram()
+		checkParserErrors(t, par)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
+				1, len(program.Statements))
+		}
+
+		statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		expression, ok := statement.Expression.(*ast.PrefixExpression)
+		if !ok {
+			t.Fatalf("statement is not ast.PrefixExpression. got=%T", statement.Expression)
+		}
+
+		if expression.Operator != tt.operator {
+			t.Fatalf("expression.Operator is not '%s'. got=%s", tt.operator, expression.Operator)
+		}
+		if !testIntegerLiteral(t, expression.Right, tt.integerValue) {
+			return
 		}
 	}
 }

@@ -55,6 +55,18 @@ func (lex *Lexer) NextToken() token.Token {
 		currentToken = newToken(token.LEFT_CURLY_BRACE, lex.char)
 	case '}':
 		currentToken = newToken(token.RIGHT_CURLY_BRACE, lex.char)
+	case '!':
+		currentToken = newToken(token.BANG, lex.char)
+	case '-':
+		currentToken = newToken(token.MINUS, lex.char)
+	case '>':
+		currentToken = newToken(token.GREATER_THEN, lex.char)
+	case '<':
+		currentToken = newToken(token.LESS_THEN, lex.char)
+	case '*':
+		currentToken = newToken(token.ASTERISK, lex.char)
+	case '/':
+		currentToken = newToken(token.SLASH, lex.char)
 	case '"':
 		currentToken.Type = token.STRING
 		currentToken.Literal = lex.readString()
