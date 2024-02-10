@@ -75,6 +75,38 @@ func testVarStatement(t *testing.T, s ast.Statement, expectedName string, expect
 	return true
 }
 
+func TestInvalidVarStatements(t *testing.T) {
+	tests := []struct {
+		input       string
+		expectedMsg string
+	}{
+		{"var string b = 5;", "Type mismatch: cannot assign int to string variable"},
+		{"var int a = \"abc\";", "Type mismatch: cannot assign string to int variable"},
+	}
+
+	for _, tt := range tests {
+		lex := lexer.New(tt.input)
+		par := New(lex)
+		_ = par.ParseProgram()
+
+		if len(par.Errors()) == 0 {
+			t.Fatalf("Expected type mismatch error but got none")
+		}
+
+		isError := false
+		for _, message := range par.Errors() {
+			if message == tt.expectedMsg {
+				isError = true
+				break
+			}
+		}
+
+		if !isError {
+			t.Errorf("expected a type mismatch error with message '%s', but got: %v", tt.expectedMsg, par.Errors())
+		}
+	}
+}
+
 func checkParserErrors(t *testing.T, par *Parser) {
 	errors := par.Errors()
 	if len(errors) == 0 {

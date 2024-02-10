@@ -109,47 +109,50 @@ func (par *Parser) parseStatement() ast.Statement {
 func (par *Parser) parseVarStatement() *ast.VarStatement {
 	statement := &ast.VarStatement{Token: par.currentToken}
 
-	// fmt.Println("Parsing type...")
 	if !par.expectNextType() {
-		// fmt.Println("Failed to parse type.")
 		return nil
 	}
-	statement.Type = par.currentToken.Literal
-	// fmt.Println("Type:", statement.Type)
+	declaredType := par.currentToken.Literal
 
-	// fmt.Println("Parsing identifier...")
 	if !par.ensureNext(token.IDENT) {
-		// fmt.Println("Failed to parse identifier.")
 		return nil
 	}
 	statement.Name = &ast.Identifier{Token: par.currentToken, Value: par.currentToken.Literal}
-	// fmt.Println("Identifier:", statement.Name.Value)
 
-	// fmt.Println("Expecting assignment operator...")
 	if !par.ensureNext(token.ASSIGN_OP) {
-		// fmt.Println("Failed to parse assignment operator.")
 		return nil
 	}
-	// fmt.Println("Assignment operator:", par.currentToken.Literal)
 
-	// fmt.Println("Parsing value expression...")
 	par.nextToken()
 	statement.Value = par.parseExpression(LOWEST)
 
 	if statement.Value == nil {
-		// fmt.Println("Failed to parse value expression.")
 		return nil
 	}
-	// fmt.Println("Value expression:", statement.Value)
 
-	// fmt.Println("Expecting semicolon...")
+	valueType := par.resolveExpressionType(statement.Value)
+	if declaredType != valueType {
+		errMsg := fmt.Sprintf("Type mismatch: cannot assign %s to %s variable", valueType, declaredType)
+		par.errors = append(par.errors, errMsg)
+	}
+
 	if !par.ensureNext(token.SEMICOLON) {
-		// fmt.Println("Failed to parse semicolon.")
 		return nil
 	}
-	// fmt.Println("Semicolon:", par.currentToken.Literal)
 
+	statement.Type = declaredType
 	return statement
+}
+
+func (par *Parser) resolveExpressionType(expr ast.Expression) string {
+	switch expr.(type) {
+	case *ast.IntegerLiteral:
+		return "int"
+	case *ast.StringLiteral:
+		return "string"
+	default:
+		return "uknown"
+	}
 }
 
 func (par *Parser) currentTokenIs(tok token.TokenType) bool {
