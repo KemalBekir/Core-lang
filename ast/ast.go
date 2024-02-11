@@ -170,3 +170,12 @@ type StringLiteral struct {
 func (strl *StringLiteral) expressionNode()      {}
 func (strl *StringLiteral) TokenLiteral() string { return strl.Token.Literal }
 func (strl *StringLiteral) String() string       { return strl.Token.Literal }
+
+type Boolean struct {
+	Token token.Token
+	Value bool
+}
+
+func (bln *Boolean) expressionNode()      {}
+func (bln *Boolean) TokenLiteral() string { return bln.Token.Literal }
+func (bln *Boolean) String() string       { return bln.Token.Literal }
