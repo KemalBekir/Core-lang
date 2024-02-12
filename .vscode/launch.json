@@ -36,7 +36,8 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/evaluator/evaluator_test.go"
+      "program": "${workspaceFolder}/evaluator/evaluator_test.go",
+      "console": "integratedTerminal"
     }
   ]
 }

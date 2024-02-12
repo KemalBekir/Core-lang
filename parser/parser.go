@@ -158,7 +158,7 @@ func (par *Parser) resolveExpressionType(expr ast.Expression) string {
 }
 
 func (par *Parser) currentTokenIs(tok token.TokenType) bool {
-	return par.peekToken.Type == tok
+	return par.currentToken.Type == tok
 }
 
 func (par *Parser) peekedTokenIs(tok token.TokenType) bool {

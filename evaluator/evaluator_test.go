@@ -7,13 +7,15 @@ import (
 	"testing"
 )
 
-func TestEvalIntegerExpression(t *testing.T) {
+func TestEvaluateIntegerExpression(t *testing.T) {
 	tests := []struct {
 		input    string
 		expected int64
 	}{
 		{"3", 3},
 		{"33", 33},
+		{"-3", -3},
+		{"-13", -13},
 	}
 
 	for _, tt := range tests {
@@ -72,4 +74,23 @@ func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
 		return false
 	}
 	return true
+}
+
+func TestBangOperator(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{"!true", false},
+		{"!false", true},
+		{"!8", false},
+		{"!!false", false},
+		{"!!true", true},
+		{"!!9", true},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEvaluate(tt.input)
+		testBooleanObject(t, evaluated, tt.expected)
+	}
 }
