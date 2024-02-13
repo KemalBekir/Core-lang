@@ -3,6 +3,7 @@ package evaluator
 import (
 	"Go-Tutorials/Core-lang/ast"
 	"Go-Tutorials/Core-lang/object"
+	"fmt"
 )
 
 var (
@@ -27,6 +28,10 @@ func Evaluate(node ast.Node) object.Object {
 	case *ast.PrefixExpression:
 		right := Evaluate(node.Right)
 		return evaluatePrefixExpression(node.Operator, right)
+	case *ast.InfixExpression:
+		left := Evaluate(node.Left)
+		right := Evaluate(node.Right)
+		return evaluateInfixExpression(node.Operator, left, right)
 	}
 
 	return nil
@@ -81,4 +86,40 @@ func evaluateMinusPrefixOperatorExpression(right object.Object) object.Object {
 
 	value := right.(*object.Integer).Value
 	return &object.Integer{Value: -value}
+}
+
+func evaluateInfixExpression(
+	operator string,
+	left, right object.Object,
+) object.Object {
+	fmt.Printf("Operator: %s, Left: %v, Right: %v\n", operator, left, right)
+	switch {
+	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
+		result := evaluateIntegerInfixExpression(operator, left, right)
+		fmt.Printf("Intermediate result: %v\n", result)
+		return result
+	default:
+		return NULL
+	}
+}
+
+func evaluateIntegerInfixExpression(
+	operator string,
+	left, right object.Object,
+) object.Object {
+	leftValue := left.(*object.Integer).Value
+	rightValue := right.(*object.Integer).Value
+	fmt.Printf("Left value: %d, Right value: %d\n", leftValue, rightValue)
+	switch operator {
+	case "+":
+		return &object.Integer{Value: leftValue + rightValue}
+	case "-":
+		return &object.Integer{Value: leftValue - rightValue}
+	case "*":
+		return &object.Integer{Value: leftValue * rightValue}
+	case "/":
+		return &object.Integer{Value: leftValue / rightValue}
+	default:
+		return NULL
+	}
 }

@@ -8,17 +8,6 @@ import (
 	"strconv"
 )
 
-var precedences = map[token.TokenType]int{
-	token.EQ:           EQUALS,
-	token.NOT_EQ:       EQUALS,
-	token.LESS_THEN:    LESSGREATER,
-	token.GREATER_THEN: LESSGREATER,
-	token.PLUS:         SUM,
-	token.MINUS:        SUM,
-	token.SLASH:        PRODUCT,
-	token.ASTERISK:     PRODUCT,
-}
-
 const (
 	_ int = iota
 	LOWEST
@@ -30,6 +19,19 @@ const (
 	CALL        // myFunction(x)
 	INDEX       // array[index]
 )
+
+var precedences = map[token.TokenType]int{
+	token.EQ:               EQUALS,
+	token.NOT_EQ:           EQUALS,
+	token.LESS_THEN:        LESSGREATER,
+	token.GREATER_THEN:     LESSGREATER,
+	token.PLUS:             SUM,
+	token.MINUS:            SUM,
+	token.SLASH:            PRODUCT,
+	token.ASTERISK:         PRODUCT,
+	token.LEFT_PARANTHESIS: CALL,
+	token.LEFT_BRACKET:     INDEX,
+}
 
 type Parser struct {
 	lex    *lexer.Lexer
@@ -70,6 +72,8 @@ func New(lex *lexer.Lexer) *Parser {
 	par.registerInfix(token.NOT_EQ, par.parseInfixExpression)
 	par.registerInfix(token.LESS_THEN, par.parseInfixExpression)
 	par.registerInfix(token.GREATER_THEN, par.parseInfixExpression)
+	par.registerInfix(token.ASTERISK, par.parseInfixExpression)
+	par.registerInfix(token.SLASH, par.parseInfixExpression)
 
 	par.nextToken()
 	par.nextToken()
