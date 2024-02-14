@@ -56,7 +56,14 @@ func (lex *Lexer) NextToken() token.Token {
 	case '}':
 		currentToken = newToken(token.RIGHT_CURLY_BRACE, lex.char)
 	case '!':
-		currentToken = newToken(token.BANG, lex.char)
+		if lex.peekAheadCharacter() == '=' {
+			char := lex.char
+			lex.readCharacter()
+			literal := string(char) + string(lex.char)
+			currentToken = token.Token{Type: token.NOT_EQ, Literal: literal}
+		} else {
+			currentToken = newToken(token.BANG, lex.char)
+		}
 	case '-':
 		currentToken = newToken(token.MINUS, lex.char)
 	case '>':

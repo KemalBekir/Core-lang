@@ -63,6 +63,7 @@ func New(lex *lexer.Lexer) *Parser {
 	par.registerPrefix(token.STRING, par.parseStringLiteral)
 	par.registerPrefix(token.TRUE, par.parseBoolean)
 	par.registerPrefix(token.FALSE, par.parseBoolean)
+	par.registerPrefix(token.LEFT_PARANTHESIS, par.parseParenthesizedExpression)
 
 	par.infixParseFunction = make(map[token.TokenType]infixParseFunction)
 	par.registerInfix(token.PLUS, par.parseInfixExpression)
@@ -336,4 +337,16 @@ func (par *Parser) parseStringLiteral() ast.Expression {
 
 func (par *Parser) parseBoolean() ast.Expression {
 	return &ast.Boolean{Token: par.currentToken, Value: par.currentTokenIs(token.TRUE)}
+}
+
+func (par *Parser) parseParenthesizedExpression() ast.Expression {
+	par.nextToken()
+
+	expression := par.parseExpression(LOWEST)
+
+	if !par.ensureNext(token.RIGHT_PARANTHESIS) {
+		return nil
+	}
+
+	return expression
 }
