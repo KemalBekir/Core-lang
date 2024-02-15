@@ -498,3 +498,52 @@ func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
 
 	return true
 }
+
+func TestIfExpression(t *testing.T) {
+	input := `if (x < y) { x }`
+
+	lex := lexer.New(input)
+	par := New(lex)
+	program := par.ParseProgram()
+	checkParserErrors(t, par)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain %d statements. Got %d\n",
+			1, len(program.Statements))
+	}
+
+	statament, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.ExpressionStatament. Got %T",
+			program.Statements[0])
+	}
+
+	expression, ok := statament.Expression.(*ast.IfExpression)
+	if !ok {
+		t.Fatalf("statement.Expression is not ast.IfExpression. Got %T",
+			statament.Expression)
+	}
+
+	if !testInfixExpression(t, expression.Condition, "x", "<", "y") {
+		return
+	}
+
+	if len(expression.Consequence.Statements) != 1 {
+		t.Errorf("consequence is not 1 statament. Got %d\n",
+			len(expression.Consequence.Statements))
+	}
+
+	consequence, ok := expression.Consequence.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Statements[0] is not ast.ExpressionStatement. Got %T",
+			expression.Consequence.Statements[0])
+	}
+
+	if !testIdentifier(t, consequence.Expression, "x") {
+		return
+	}
+
+	if expression.Alternative != nil {
+		t.Errorf("expression.Alternative.Statements was not nil. Got %+v", expression.Alternative)
+	}
+}

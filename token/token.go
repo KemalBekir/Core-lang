@@ -47,6 +47,8 @@ const (
 	TRUE        = "TRUE"
 	FALSE       = "FALSE"
 	RETURN      = "RETURN"
+	IF          = "IF"
+	ELSE        = "ELSE"
 	INT_TYPE    = "INT_TYPE"
 	STRING_TYPE = "STRING_TYPE"
 )
@@ -58,6 +60,8 @@ var tokenDictionary = map[string]TokenType{
 	"string":   STRING_TYPE,
 	"true":     TRUE,
 	"false":    FALSE,
+	"if":       IF,
+	"else":     ELSE,
 	"return":   RETURN,
 }
 

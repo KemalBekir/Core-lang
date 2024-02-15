@@ -64,6 +64,7 @@ func New(lex *lexer.Lexer) *Parser {
 	par.registerPrefix(token.TRUE, par.parseBoolean)
 	par.registerPrefix(token.FALSE, par.parseBoolean)
 	par.registerPrefix(token.LEFT_PARANTHESIS, par.parseParenthesizedExpression)
+	par.registerPrefix(token.IF, par.parseIfExpression)
 
 	par.infixParseFunction = make(map[token.TokenType]infixParseFunction)
 	par.registerInfix(token.PLUS, par.parseInfixExpression)
@@ -349,4 +350,54 @@ func (par *Parser) parseParenthesizedExpression() ast.Expression {
 	}
 
 	return expression
+}
+
+func (par *Parser) parseIfExpression() ast.Expression {
+	expression := *&ast.IfExpression{Token: par.currentToken}
+
+	if !par.ensureNext(token.LEFT_PARANTHESIS) {
+		return nil
+	}
+
+	par.nextToken()
+	expression.Condition = par.parseExpression(LOWEST)
+
+	if !par.ensureNext(token.RIGHT_PARANTHESIS) {
+		return nil
+	}
+
+	if !par.ensureNext(token.LEFT_CURLY_BRACE) {
+		return nil
+	}
+
+	expression.Consequence = par.parseBlockStatement()
+
+	if par.peekedTokenIs(token.ELSE) {
+		par.nextToken()
+
+		if !par.ensureNext(token.LEFT_CURLY_BRACE) {
+			return nil
+		}
+
+		expression.Alternative = par.parseBlockStatement()
+	}
+
+	return &expression
+}
+
+func (par *Parser) parseBlockStatement() *ast.BlockStatement {
+	block := &ast.BlockStatement{Token: par.currentToken}
+	block.Statements = []ast.Statement{}
+
+	par.nextToken()
+
+	for !par.currentTokenIs(token.RIGHT_CURLY_BRACE) && !par.currentTokenIs(token.END) {
+		statement := par.parseStatement()
+		if statement != nil {
+			block.Statements = append(block.Statements, statement)
+		}
+		par.nextToken()
+	}
+
+	return block
 }
