@@ -65,6 +65,7 @@ func New(lex *lexer.Lexer) *Parser {
 	par.registerPrefix(token.FALSE, par.parseBoolean)
 	par.registerPrefix(token.LEFT_PARANTHESIS, par.parseParenthesizedExpression)
 	par.registerPrefix(token.IF, par.parseIfExpression)
+	par.registerPrefix(token.FUNCTION, par.parseFunctionLiteral)
 
 	par.infixParseFunction = make(map[token.TokenType]infixParseFunction)
 	par.registerInfix(token.PLUS, par.parseInfixExpression)
@@ -400,4 +401,49 @@ func (par *Parser) parseBlockStatement() *ast.BlockStatement {
 	}
 
 	return block
+}
+
+func (par *Parser) parseFunctionLiteral() ast.Expression {
+	literal := &ast.FunctionLiteral{Token: par.currentToken}
+
+	if !par.ensureNext(token.LEFT_PARANTHESIS) {
+		return nil
+	}
+
+	literal.Parameters = par.parseFunctionParameters()
+
+	if !par.ensureNext(token.LEFT_CURLY_BRACE) {
+		return nil
+	}
+
+	literal.Body = par.parseBlockStatement()
+
+	return literal
+}
+
+func (par *Parser) parseFunctionParameters() []*ast.Identifier {
+	identifiers := []*ast.Identifier{}
+
+	if par.peekedTokenIs(token.RIGHT_PARANTHESIS) {
+		par.nextToken()
+		return identifiers
+	}
+
+	par.nextToken()
+
+	ident := &ast.Identifier{Token: par.currentToken, Value: par.currentToken.Literal}
+	identifiers = append(identifiers, ident)
+
+	for par.peekedTokenIs(token.COMMA) {
+		par.nextToken()
+		par.nextToken()
+		ident := &ast.Identifier{Token: par.currentToken, Value: par.currentToken.Literal}
+		identifiers = append(identifiers, ident)
+	}
+
+	if !par.ensureNext(token.RIGHT_PARANTHESIS) {
+		return nil
+	}
+
+	return identifiers
 }

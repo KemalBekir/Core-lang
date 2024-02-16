@@ -547,3 +547,81 @@ func TestIfExpression(t *testing.T) {
 		t.Errorf("expression.Alternative.Statements was not nil. Got %+v", expression.Alternative)
 	}
 }
+
+func TestParsingFunctionLiteral(t *testing.T) {
+	input := `function(a, b) { a + b; }`
+
+	lex := lexer.New(input)
+	par := New(lex)
+	program := par.ParseProgram()
+	checkParserErrors(t, par)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain %d statements. Got %d\n",
+			1, len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Stataments[0] is not ast.ExpressionStatement. Got %T",
+			program.Statements[0])
+	}
+
+	function, ok := statement.Expression.(*ast.FunctionLiteral)
+	if !ok {
+		t.Fatalf("statement.Expression is not ast.FunctionLiteral. Got %T",
+			statement.Expression)
+	}
+
+	if len(function.Parameters) != 2 {
+		t.Fatalf("Function literal parameters wrong. Require 2, got %d\n",
+			len(function.Parameters))
+	}
+
+	testLiteralExpression(t, function.Parameters[0], "a")
+	testLiteralExpression(t, function.Parameters[1], "b")
+
+	if len(function.Body.Statements) != 1 {
+		t.Fatalf("Expected 1 statement in function.Body.Statements, but found %d.\n",
+			len(function.Body.Statements))
+	}
+
+	bodyStatement, ok := function.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected function body statament to be ast.ExpressionStatement. Got %T",
+			function.Body.Statements[0])
+	}
+
+	testInfixExpression(t, bodyStatement.Expression, "a", "+", "b")
+
+}
+
+func TestFunctionParameterParsing(t *testing.T) {
+	tests := []struct {
+		input              string
+		expectedParameters []string
+	}{
+		{input: "function() {};", expectedParameters: []string{}},
+		{input: "function(a) {};", expectedParameters: []string{"a"}},
+		{input: "function(a, b, c) {};", expectedParameters: []string{"a", "b", "c"}},
+	}
+
+	for _, tt := range tests {
+		lex := lexer.New(tt.input)
+		par := New(lex)
+		program := par.ParseProgram()
+		checkParserErrors(t, par)
+
+		statement := program.Statements[0].(*ast.ExpressionStatement)
+		function := statement.Expression.(*ast.FunctionLiteral)
+
+		if len(function.Parameters) != len(tt.expectedParameters) {
+			t.Errorf("Expected parameter count: %d; found: %d.\n",
+				len(tt.expectedParameters), len(function.Parameters))
+		}
+
+		for i, identifier := range tt.expectedParameters {
+			testLiteralExpression(t, function.Parameters[i], identifier)
+		}
+	}
+}

@@ -3,6 +3,7 @@ package ast
 import (
 	"Go-Tutorials/Core-lang/token"
 	"bytes"
+	"strings"
 )
 
 type Node interface {
@@ -190,19 +191,19 @@ type IfExpression struct {
 func (ife *IfExpression) expressionNode()      {}
 func (ife *IfExpression) TokenLiteral() string { return ife.Token.Literal }
 func (ife *IfExpression) String() string {
-	var out bytes.Buffer
+	var output bytes.Buffer
 
-	out.WriteString("if")
-	out.WriteString(ife.Condition.String())
-	out.WriteString(" ")
-	out.WriteString(ife.Consequence.String())
+	output.WriteString("if")
+	output.WriteString(ife.Condition.String())
+	output.WriteString(" ")
+	output.WriteString(ife.Consequence.String())
 
 	if ife.Alternative != nil {
-		out.WriteString("else ")
-		out.WriteString(ife.Alternative.String())
+		output.WriteString("else ")
+		output.WriteString(ife.Alternative.String())
 	}
 
-	return out.String()
+	return output.String()
 }
 
 type BlockStatement struct {
@@ -213,11 +214,36 @@ type BlockStatement struct {
 func (bs *BlockStatement) statementNode()       {}
 func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
 func (bs *BlockStatement) String() string {
-	var out bytes.Buffer
+	var output bytes.Buffer
 
 	for _, s := range bs.Statements {
-		out.WriteString(s.String())
+		output.WriteString(s.String())
 	}
 
-	return out.String()
+	return output.String()
+}
+
+type FunctionLiteral struct {
+	Token      token.Token // 'function' token
+	Parameters []*Identifier
+	Body       *BlockStatement
+}
+
+func (fnl *FunctionLiteral) expressionNode()      {}
+func (fnl *FunctionLiteral) TokenLiteral() string { return fnl.Token.Literal }
+func (fnl *FunctionLiteral) String() string {
+	var output bytes.Buffer
+
+	parameters := []string{}
+	for _, p := range fnl.Parameters {
+		parameters = append(parameters, p.String())
+	}
+
+	output.WriteString(fnl.TokenLiteral())
+	output.WriteString("(")
+	output.WriteString(strings.Join(parameters, ", "))
+	output.WriteString(") ")
+	output.WriteString(fnl.Body.String())
+
+	return output.String()
 }
