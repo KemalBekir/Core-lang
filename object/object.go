@@ -1,13 +1,19 @@
 package object
 
-import "fmt"
+import (
+	"Go-Tutorials/Core-lang/ast"
+	"bytes"
+	"fmt"
+	"strings"
+)
 
 type ObjectType string
 
 const (
-	INTEGER_OBJ = "INTEGER"
-	BOOLEAN_OBJ = "BOOLEAN"
-	NULL_OBJ    = "NULL"
+	INTEGER_OBJ  = "INTEGER"
+	BOOLEAN_OBJ  = "BOOLEAN"
+	NULL_OBJ     = "NULL"
+	FUNCTION_OBJ = "FUNCTION"
 )
 
 type Object interface {
@@ -36,3 +42,29 @@ type Null struct{}
 
 func (n *Null) Type() ObjectType { return NULL_OBJ }
 func (n *Null) Inspect() string  { return "null" }
+
+// Function
+
+type Function struct {
+	Parameters []*ast.Identifier
+	Body       *ast.BlockStatement
+	Env        *Environment
+}
+
+func (fn *Function) Type() ObjectType { return FUNCTION_OBJ }
+func (fn *Function) Inspect() string {
+	var output bytes.Buffer
+	parameters := []string{}
+	for _, p := range fn.Parameters {
+		parameters = append(parameters, p.String())
+	}
+
+	output.WriteString("function")
+	output.WriteString("(")
+	output.WriteString(strings.Join(parameters, ", "))
+	output.WriteString(") {\n")
+	output.WriteString(fn.Body.String())
+	output.WriteString("\n}")
+
+	return output.String()
+}

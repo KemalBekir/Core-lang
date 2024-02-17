@@ -12,13 +12,13 @@ var (
 	FALSE = &object.Boolean{Value: false}
 )
 
-func Evaluate(node ast.Node) object.Object {
+func Evaluate(node ast.Node, env *object.Environment) object.Object {
 	switch node := node.(type) {
 	// Statements
 	case *ast.Program:
-		return evaluateStatements(node.Statements)
+		return evaluateStatements(node, env)
 	case *ast.ExpressionStatement:
-		return Evaluate(node.Expression)
+		return Evaluate(node.Expression, env)
 
 	// Expressions
 	case *ast.IntegerLiteral:
@@ -26,22 +26,28 @@ func Evaluate(node ast.Node) object.Object {
 	case *ast.Boolean:
 		return nativeBoolToBooleanObject(node.Value)
 	case *ast.PrefixExpression:
-		right := Evaluate(node.Right)
+		right := Evaluate(node.Right, env)
 		return evaluatePrefixExpression(node.Operator, right)
 	case *ast.InfixExpression:
-		left := Evaluate(node.Left)
-		right := Evaluate(node.Right)
+		left := Evaluate(node.Left, env)
+		right := Evaluate(node.Right, env)
 		return evaluateInfixExpression(node.Operator, left, right)
+
+	case *ast.FunctionLiteral:
+		parameters := node.Parameters
+		body := node.Body
+		return &object.Function{Parameters: parameters, Env: env, Body: body}
+
 	}
 
 	return nil
 }
 
-func evaluateStatements(statements []ast.Statement) object.Object {
+func evaluateStatements(program *ast.Program, env *object.Environment) object.Object {
 	var result object.Object
 
-	for _, statement := range statements {
-		result = Evaluate(statement)
+	for _, statement := range program.Statements {
+		result = Evaluate(statement, env)
 	}
 
 	return result
