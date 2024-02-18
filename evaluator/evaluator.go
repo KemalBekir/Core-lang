@@ -6,6 +6,10 @@ import (
 	"fmt"
 )
 
+func newError(format string, a ...interface{}) *object.Error {
+	return &object.Error{Message: fmt.Sprintf(format, a...)}
+}
+
 var (
 	NULL  = &object.Null{}
 	TRUE  = &object.Boolean{Value: true}
@@ -17,9 +21,26 @@ func Evaluate(node ast.Node, env *object.Environment) object.Object {
 	// Statements
 	case *ast.Program:
 		return evaluateStatements(node, env)
+
+	case *ast.BlockStatement:
+		return evaluateBlockStatement(node, env)
+
 	case *ast.ExpressionStatement:
 		return Evaluate(node.Expression, env)
 
+	case *ast.ReturnStatement:
+		value := Evaluate(node.ReturnValue, env)
+		if isError(value) {
+			return value
+		}
+		return &object.ReturnValue{Value: value}
+
+	case *ast.VarStatement:
+		value := Evaluate(node.Value, env)
+		if isError(value) {
+			return value
+		}
+		env.Set(node.Name.Value, value)
 	// Expressions
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
@@ -98,11 +119,11 @@ func evaluateInfixExpression(
 	operator string,
 	left, right object.Object,
 ) object.Object {
-	fmt.Printf("Operator: %s, Left: %v, Right: %v\n", operator, left, right)
+	// fmt.Printf("Operator: %s, Left: %v, Right: %v\n", operator, left, right)
 	switch {
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
 		result := evaluateIntegerInfixExpression(operator, left, right)
-		fmt.Printf("Intermediate result: %v\n", result)
+		// fmt.Printf("Intermediate result: %v\n", result)
 		return result
 	default:
 		return NULL
@@ -115,7 +136,7 @@ func evaluateIntegerInfixExpression(
 ) object.Object {
 	leftValue := left.(*object.Integer).Value
 	rightValue := right.(*object.Integer).Value
-	fmt.Printf("Left value: %d, Right value: %d\n", leftValue, rightValue)
+	// fmt.Printf("Left value: %d, Right value: %d\n", leftValue, rightValue)
 	switch operator {
 	case "+":
 		return &object.Integer{Value: leftValue + rightValue}
@@ -128,4 +149,28 @@ func evaluateIntegerInfixExpression(
 	default:
 		return NULL
 	}
+}
+
+func evaluateBlockStatement(block *ast.BlockStatement, environment *object.Environment) object.Object {
+	var result object.Object
+
+	for _, statement := range block.Statements {
+		result = Evaluate(statement, environment)
+		fmt.Printf("Evaluated: %#v\n", result)
+		if result != nil {
+			returnType := result.Type()
+			if returnType == object.RETURN_VALUE_OBJ || returnType == object.ERROR_OBJ {
+				return result
+			}
+		}
+	}
+
+	return result
+}
+
+func isError(obj object.Object) bool {
+	if obj != nil {
+		return obj.Type() == object.ERROR_OBJ
+	}
+	return false
 }

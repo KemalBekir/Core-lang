@@ -121,32 +121,39 @@ func checkParserErrors(t *testing.T, par *Parser) {
 }
 
 func TestReturnStatements(t *testing.T) {
-	input := `
-return 3;
-return 15;
-return 123321;
-	`
-
-	lex := lexer.New(input)
-	par := New(lex)
-
-	program := par.ParseProgram()
-	checkParserErrors(t, par)
-
-	if len(program.Statements) != 3 {
-		t.Fatalf("program.Statements expected 3 statements, got=%d",
-			len(program.Statements))
+	tests := []struct {
+		input         string
+		expectedValue interface{}
+	}{
+		{"return 3;", 3},
+		{"return true;", true},
+		{"return foobar;", "foobar"},
 	}
 
-	for _, statement := range program.Statements {
+	for _, tt := range tests {
+		lex := lexer.New(tt.input)
+		par := New(lex)
+		program := par.ParseProgram()
+		checkParserErrors(t, par)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("programStataments does not contain 1 statement. Got %d",
+				len(program.Statements))
+		}
+
+		statement := program.Statements[0]
 		returnStatement, ok := statement.(*ast.ReturnStatement)
 		if !ok {
-			t.Errorf("statement not *ast.ReturnStatement. got=%T", statement)
-			continue
+			t.Fatalf("statement not *ast.ReturnStatement. Got %T", statement)
 		}
+
 		if returnStatement.TokenLiteral() != "return" {
-			t.Errorf("returnStatement.TokenLiteral not 'return', got %q",
+			t.Fatalf("returnStatement.TokenLiteral not 'return', got %q",
 				returnStatement.TokenLiteral())
+		}
+
+		if testLiteralExpression(t, returnStatement.ReturnValue, tt.expectedValue) {
+			return
 		}
 	}
 }
@@ -273,9 +280,9 @@ func TestParsingInfixExpression(t *testing.T) {
 				program.Statements[0])
 		}
 
-		fmt.Println("Input:", tt.input)
-		fmt.Println("Expected:", tt.leftValue, tt.operator, tt.rightValue)
-		fmt.Println("Actual:", statement.Expression)
+		// fmt.Println("Input:", tt.input)
+		// fmt.Println("Expected:", tt.leftValue, tt.operator, tt.rightValue)
+		// fmt.Println("Actual:", statement.Expression)
 
 		if len(program.Statements) != 1 {
 			t.Fatalf("program.Statements does not contain %d statements. Got %d\n",
