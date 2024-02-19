@@ -57,25 +57,25 @@ func New(lex *lexer.Lexer) *Parser {
 
 	par.prefixParseFunction = make(map[token.TokenType]prefixParseFunction)
 	par.registerPrefix(token.IDENT, par.parseIdentifier)
+	par.registerPrefix(token.INT, par.parseIntegerLiteral)
 	par.registerPrefix(token.BANG, par.parsePrefixExpression)
 	par.registerPrefix(token.MINUS, par.parsePrefixExpression)
-	par.registerPrefix(token.INT, par.parseIntegerLiteral)
-	par.registerPrefix(token.STRING, par.parseStringLiteral)
 	par.registerPrefix(token.TRUE, par.parseBoolean)
 	par.registerPrefix(token.FALSE, par.parseBoolean)
 	par.registerPrefix(token.LEFT_PARANTHESIS, par.parseParenthesizedExpression)
 	par.registerPrefix(token.IF, par.parseIfExpression)
 	par.registerPrefix(token.FUNCTION, par.parseFunctionLiteral)
+	par.registerPrefix(token.STRING, par.parseStringLiteral)
 
 	par.infixParseFunction = make(map[token.TokenType]infixParseFunction)
 	par.registerInfix(token.PLUS, par.parseInfixExpression)
 	par.registerInfix(token.MINUS, par.parseInfixExpression)
 	par.registerInfix(token.SLASH, par.parseInfixExpression)
+	par.registerInfix(token.ASTERISK, par.parseInfixExpression)
 	par.registerInfix(token.EQ, par.parseInfixExpression)
 	par.registerInfix(token.NOT_EQ, par.parseInfixExpression)
 	par.registerInfix(token.LESS_THEN, par.parseInfixExpression)
 	par.registerInfix(token.GREATER_THEN, par.parseInfixExpression)
-	par.registerInfix(token.ASTERISK, par.parseInfixExpression)
 	par.registerInfix(token.SLASH, par.parseInfixExpression)
 
 	par.nextToken()
@@ -192,14 +192,24 @@ func (par *Parser) peekUnexpectedError(tok token.TokenType) {
 }
 
 func (par *Parser) parseReturnStatement() *ast.ReturnStatement {
+	fmt.Println("parseReturnStatement: Entering")
 	statement := &ast.ReturnStatement{Token: par.currentToken}
+
+	fmt.Printf("parseReturnStatement: Current token: %+v\n", par.currentToken)
 
 	par.nextToken()
 
+	fmt.Printf("parseReturnStatement: Token after nextToken: %+v\n", par.currentToken)
+
 	statement.ReturnValue = par.parseExpression(LOWEST)
 
+	fmt.Printf("parseReturnStatement: Parsed return value: %+v\n", statement.ReturnValue)
+
 	if par.peekedTokenIs(token.SEMICOLON) {
+		fmt.Println("parseReturnStatement: Found semicolon, consuming it.")
 		par.nextToken()
+	} else {
+		fmt.Println("parseReturnStatement: No semicolon found after return value.")
 	}
 
 	return statement

@@ -42,14 +42,7 @@ func testEvaluate(input string) object.Object {
 	program := par.ParseProgram()
 	environment := object.NewEnvironment()
 
-	evaluated := Evaluate(program, environment)
-
-	// If the evaluated object is a return value, extract the inner object
-	if returnValue, ok := evaluated.(*object.ReturnValue); ok {
-		return returnValue.Value
-	}
-
-	return evaluated
+	return Evaluate(program, environment)
 }
 
 func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {

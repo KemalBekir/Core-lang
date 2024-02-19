@@ -44,15 +44,33 @@ func Evaluate(node ast.Node, env *object.Environment) object.Object {
 	// Expressions
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
+
 	case *ast.Boolean:
 		return nativeBoolToBooleanObject(node.Value)
+
 	case *ast.PrefixExpression:
 		right := Evaluate(node.Right, env)
+		if isError(right) {
+			return right
+		}
 		return evaluatePrefixExpression(node.Operator, right)
+
 	case *ast.InfixExpression:
 		left := Evaluate(node.Left, env)
+		if isError(left) {
+			return left
+		}
 		right := Evaluate(node.Right, env)
+		if isError(right) {
+			return right
+		}
 		return evaluateInfixExpression(node.Operator, left, right)
+
+	case *ast.IfExpression:
+		return evaluateIfExpression(node, env)
+
+	case *ast.Identifier:
+		return evaluateIdentifier(node, env)
 
 	case *ast.FunctionLiteral:
 		parameters := node.Parameters
@@ -173,4 +191,50 @@ func isError(obj object.Object) bool {
 		return obj.Type() == object.ERROR_OBJ
 	}
 	return false
+}
+
+func evaluateIfExpression(
+	ife *ast.IfExpression,
+	env *object.Environment,
+) object.Object {
+	condition := Evaluate(ife.Condition, env)
+	if isError(condition) {
+		return condition
+	}
+
+	if isTruthy(condition) {
+		return Evaluate(ife.Consequence, env)
+	} else if ife.Alternative != nil {
+		return Evaluate(ife.Alternative, env)
+	} else {
+		return NULL
+	}
+}
+
+func isTruthy(obj object.Object) bool {
+	switch obj {
+	case NULL:
+		return false
+	case TRUE:
+		return true
+	case FALSE:
+		return false
+	default:
+		return true
+	}
+}
+
+func evaluateIdentifier(
+	node *ast.Identifier,
+	env *object.Environment,
+) object.Object {
+	if value, ok := env.Get(node.Value); ok {
+		return value
+	}
+
+	if builtin, ok := builtins[node.Value]; ok {
+		return builtin
+	}
+
+	return newError("identifier not found: " + node.Value)
 }
