@@ -87,6 +87,13 @@ func evaluateStatements(program *ast.Program, env *object.Environment) object.Ob
 
 	for _, statement := range program.Statements {
 		result = Evaluate(statement, env)
+
+		switch result := result.(type) {
+		case *object.ReturnValue:
+			return result.Value
+		case *object.Error:
+			return result
+		}
 	}
 
 	return result
