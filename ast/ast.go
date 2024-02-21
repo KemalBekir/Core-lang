@@ -247,3 +247,92 @@ func (fnl *FunctionLiteral) String() string {
 
 	return output.String()
 }
+
+type CallExpression struct {
+	Token     token.Token // '(' token
+	Function  Expression  // Identifier or FunctionLiteral
+	Arguments []Expression
+}
+
+func (ce *CallExpression) expressionNode()      {}
+func (ce *CallExpression) TokenLiteral() string { return ce.Token.Literal }
+func (ce *CallExpression) String() string {
+	var output bytes.Buffer
+
+	arguments := []string{}
+	for _, a := range ce.Arguments {
+		arguments = append(arguments, a.String())
+	}
+
+	output.WriteString(ce.Function.String())
+	output.WriteString("(")
+	output.WriteString(strings.Join(arguments, ", "))
+	output.WriteString(")")
+
+	return output.String()
+}
+
+type ArrayLiteral struct {
+	Token    token.Token // '[' token
+	Elements []Expression
+}
+
+func (arl *ArrayLiteral) expressionNode()      {}
+func (arl *ArrayLiteral) TokenLiteral() string { return arl.Token.Literal }
+func (arl *ArrayLiteral) String() string {
+	var output bytes.Buffer
+
+	elements := []string{}
+
+	for _, el := range arl.Elements {
+		elements = append(elements, el.String())
+	}
+
+	output.WriteString("[")
+	output.WriteString(strings.Join(elements, ", "))
+	output.WriteString("]")
+
+	return output.String()
+}
+
+type IndexExpression struct {
+	Token token.Token // [ token
+	Left  Expression
+	Index Expression
+}
+
+func (ie *IndexExpression) expressionNode()      {}
+func (ie *IndexExpression) TokenLiteral() string { return ie.Token.Literal }
+func (ie *IndexExpression) String() string {
+	var output bytes.Buffer
+
+	output.WriteString("(")
+	output.WriteString(ie.Left.String())
+	output.WriteString("[")
+	output.WriteString(ie.Index.String())
+	output.WriteString("])")
+
+	return output.String()
+}
+
+type HashLiteral struct {
+	Token token.Token // '{' token
+	Pairs map[Expression]Expression
+}
+
+func (hl *HashLiteral) expressionNode()      {}
+func (hl *HashLiteral) TokenLiteral() string { return hl.Token.Literal }
+func (hl *HashLiteral) String() string {
+	var output bytes.Buffer
+
+	pairs := []string{}
+	for key, value := range hl.Pairs {
+		pairs = append(pairs, key.String()+":"+value.String())
+	}
+
+	output.WriteString("{")
+	output.WriteString(strings.Join(pairs, ", "))
+	output.WriteString("}")
+
+	return output.String()
+}
