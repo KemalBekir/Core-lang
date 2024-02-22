@@ -41,12 +41,16 @@ func Evaluate(node ast.Node, env *object.Environment) object.Object {
 			return value
 		}
 		env.Set(node.Name.Value, value)
+
 	// Expressions
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
 
 	case *ast.Boolean:
 		return nativeBoolToBooleanObject(node.Value)
+
+	case *ast.StringLiteral:
+		return &object.String{Value: node.Value}
 
 	case *ast.PrefixExpression:
 		right := Evaluate(node.Right, env)
@@ -76,6 +80,17 @@ func Evaluate(node ast.Node, env *object.Environment) object.Object {
 		parameters := node.Parameters
 		body := node.Body
 		return &object.Function{Parameters: parameters, Env: env, Body: body}
+
+	case *ast.CallExpression:
+		function := Evaluate(node.Function, env)
+		if isError(function) {
+			return function
+		}
+		arguments := evaluateExpressions(node.Arguments, env)
+		if len(arguments) == 1 && isError(args[0]) {
+			return arguments[0]
+		}
+		return applyFunction(function, arguments)
 
 	}
 
@@ -245,3 +260,29 @@ func evaluateIdentifier(
 
 	return newError("identifier not found: " + node.Value)
 }
+
+func evaluateExpressions(
+	exps []ast.Expression
+	env *object.Environment
+) []object.Object {
+	var result []object.Object
+
+	for _, e := range expressions {
+		evaluated := Evaluate(e, env)
+		if isError(evaluated) {
+			return []object.Object{evaluated}
+		}
+		result = append(result, evaluated)
+	}
+
+	return result
+}
+//TODO finish apply function
+// func applyFunction(fn object.Object, arguments []object.Object) object.Object {
+// 	switch fn := fn.(type) {
+// 	case *object.Function:
+
+// 	default:
+// 		return newError("not a function %s", fn.Type())
+// 	}
+// }
