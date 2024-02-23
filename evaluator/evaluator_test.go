@@ -4,7 +4,6 @@ import (
 	"Go-Tutorials/Core-lang/lexer"
 	"Go-Tutorials/Core-lang/object"
 	"Go-Tutorials/Core-lang/parser"
-	"fmt"
 	"testing"
 )
 
@@ -121,8 +120,23 @@ func TestReturnStatements(t *testing.T) {
 
 	for _, tt := range tests {
 		evaluated := testEvaluate(tt.input)
-		fmt.Printf("Input: %s\n", tt.input)
-		fmt.Printf("Evaluated: %#v\n", evaluated)
+		// fmt.Printf("Input: %s\n", tt.input)
+		// fmt.Printf("Evaluated: %#v\n", evaluated)
 		testIntegerObject(t, evaluated, tt.expected)
+	}
+}
+
+func TestVarStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"var int a = 3; a;", 3},
+		{"var int a = 3 * 3; a;", 9},
+		{"var int a = 3; var int b = a; var int c = a + b + 3; c;", 9},
+	}
+
+	for _, tt := range tests {
+		testIntegerObject(t, testEvaluate(tt.input), tt.expected)
 	}
 }

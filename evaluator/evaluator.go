@@ -87,7 +87,7 @@ func Evaluate(node ast.Node, env *object.Environment) object.Object {
 			return function
 		}
 		arguments := evaluateExpressions(node.Arguments, env)
-		if len(arguments) == 1 && isError(args[0]) {
+		if len(arguments) == 1 && isError(arguments[0]) {
 			return arguments[0]
 		}
 		return applyFunction(function, arguments)
@@ -262,8 +262,8 @@ func evaluateIdentifier(
 }
 
 func evaluateExpressions(
-	exps []ast.Expression
-	env *object.Environment
+	expressions []ast.Expression,
+	env *object.Environment,
 ) []object.Object {
 	var result []object.Object
 
@@ -277,12 +277,40 @@ func evaluateExpressions(
 
 	return result
 }
-//TODO finish apply function
-// func applyFunction(fn object.Object, arguments []object.Object) object.Object {
-// 	switch fn := fn.(type) {
-// 	case *object.Function:
+func applyFunction(fn object.Object, args []object.Object) object.Object {
+	switch fn := fn.(type) {
 
-// 	default:
-// 		return newError("not a function %s", fn.Type())
-// 	}
-// }
+	case *object.Function:
+		extendedEnv := extendFunctionEnv(fn, args)
+		evaulated := Evaluate(fn.Body, extendedEnv)
+		return unwrapReturnValue(evaulated)
+
+	case *object.Builtin:
+		return fn.Fn(args...)
+
+	default:
+		return newError("not a function: %s", fn.Type())
+	}
+
+}
+
+func extendFunctionEnv(
+	fn *object.Function,
+	arguments []object.Object,
+) *object.Environment {
+	env := object.NewEnclosedEnvironment(fn.Env)
+
+	for parameterIndex, parameter := range fn.Parameters {
+		env.Set(parameter.Value, arguments[parameterIndex])
+	}
+
+	return env
+}
+
+func unwrapReturnValue(obj object.Object) object.Object {
+	if returnValue, ok := obj.(*object.ReturnValue); ok {
+		return returnValue.Value
+	}
+
+	return obj
+}

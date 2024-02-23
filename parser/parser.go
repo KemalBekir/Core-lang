@@ -192,24 +192,24 @@ func (par *Parser) peekUnexpectedError(tok token.TokenType) {
 }
 
 func (par *Parser) parseReturnStatement() *ast.ReturnStatement {
-	fmt.Println("parseReturnStatement: Entering")
+	// fmt.Println("parseReturnStatement: Entering")
 	statement := &ast.ReturnStatement{Token: par.currentToken}
 
-	fmt.Printf("parseReturnStatement: Current token: %+v\n", par.currentToken)
+	// fmt.Printf("parseReturnStatement: Current token: %+v\n", par.currentToken)
 
 	par.nextToken()
 
-	fmt.Printf("parseReturnStatement: Token after nextToken: %+v\n", par.currentToken)
+	// fmt.Printf("parseReturnStatement: Token after nextToken: %+v\n", par.currentToken)
 
 	statement.ReturnValue = par.parseExpression(LOWEST)
 
-	fmt.Printf("parseReturnStatement: Parsed return value: %+v\n", statement.ReturnValue)
+	// fmt.Printf("parseReturnStatement: Parsed return value: %+v\n", statement.ReturnValue)
 
 	if par.peekedTokenIs(token.SEMICOLON) {
-		fmt.Println("parseReturnStatement: Found semicolon, consuming it.")
+		// fmt.Println("parseReturnStatement: Found semicolon, consuming it.")
 		par.nextToken()
 	} else {
-		fmt.Println("parseReturnStatement: No semicolon found after return value.")
+		// fmt.Println("parseReturnStatement: No semicolon found after return value.")
 	}
 
 	return statement
