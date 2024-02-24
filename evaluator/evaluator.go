@@ -92,6 +92,25 @@ func Evaluate(node ast.Node, env *object.Environment) object.Object {
 		}
 		return applyFunction(function, arguments)
 
+	case *ast.ArrayLiteral:
+		elements := evaluateExpressions(node.Elements, env)
+		if len(elements) == 1 && isError(elements[0]) {
+			return elements[0]
+		}
+		return &object.Array{Elements: elements}
+
+	case *ast.IndexExpression:
+		left := Evaluate(node.Left, env)
+		if isError(left) {
+			return left
+		}
+
+		index := Evaluate(node.Index, env)
+
+		if isError(index) {
+			return index
+		}
+		return evaluateIndexExpression(left, index)
 	}
 
 	return nil
@@ -313,4 +332,43 @@ func unwrapReturnValue(obj object.Object) object.Object {
 	}
 
 	return obj
+}
+
+func evaluateIndexExpression(left, index object.Object) object.Object {
+	switch {
+	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
+		return evaluateArrayIndexExpression(left, index)
+	case left.Type() == object.HASH_OBJ:
+		return evaluateHashIndexExpression(left, index)
+	default:
+		return newError("Index operator not supported: %s", left.Type())
+	}
+}
+
+func evaluateArrayIndexExpression(array, index object.Object) object.Object {
+	arrayObject := array.(*object.Array)
+	idx := index.(*object.Integer).Value
+	max := int64(len(arrayObject.Elements) - 1)
+
+	if idx < 0 || idx > max {
+		return NULL
+	}
+
+	return arrayObject.Elements[idx]
+}
+
+func evaluateHashIndexExpression(hash, index object.Object) object.Object {
+	hashObject := hash.(*object.Hash)
+
+	key, ok := index.(object.Hashable)
+	if !ok {
+		return newError("Unusable as hash key: %s", index.Type())
+	}
+
+	pair, ok := hashObject.Pairs[key.HashKey()]
+	if !ok {
+		return NULL
+	}
+
+	return pair.Value
 }
